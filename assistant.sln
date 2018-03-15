@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "assistant", "assistant\assistant.vcxproj", "{5B857309-3B56-49D4-9B85-DFF670CC69EA}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MouseHook", "MouseHook\MouseHook\MouseHook.vcxproj", "{7C47F526-55BF-441E-B4B8-A9EEE36EEDE1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5B857309-3B56-49D4-9B85-DFF670CC69EA}.Debug|Win32.ActiveCfg = Debug|Win32
+		{5B857309-3B56-49D4-9B85-DFF670CC69EA}.Debug|Win32.Build.0 = Debug|Win32
+		{5B857309-3B56-49D4-9B85-DFF670CC69EA}.Release|Win32.ActiveCfg = Release|Win32
+		{5B857309-3B56-49D4-9B85-DFF670CC69EA}.Release|Win32.Build.0 = Release|Win32
+		{7C47F526-55BF-441E-B4B8-A9EEE36EEDE1}.Debug|Win32.ActiveCfg = Debug|Win32
+		{7C47F526-55BF-441E-B4B8-A9EEE36EEDE1}.Debug|Win32.Build.0 = Debug|Win32
+		{7C47F526-55BF-441E-B4B8-A9EEE36EEDE1}.Release|Win32.ActiveCfg = Release|Win32
+		{7C47F526-55BF-441E-B4B8-A9EEE36EEDE1}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
