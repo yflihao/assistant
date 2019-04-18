@@ -14,11 +14,13 @@
 #define WM_MSG_MOUSE_R_DOWM   WM_USER + 307
 #define WM_MSG_MOUSE_R_UP     WM_USER + 308
 #define WM_MSG_MOUSE_MOVE     WM_USER + 309 
+#define WM_MSG_KEYDOWN        WM_USER + 310
 
 
 //将变量放在共享段,及所有线程共享以下变量;
 #pragma data_seg(".SHARED")
 static HHOOK  hhkMouse = NULL;		//鼠标钩子句柄;
+static HHOOK  hhkKeyboard = NULL;	//键盘钩子句柄;
 static HINSTANCE g_hInstDll = NULL; //本dll的实例句柄;
 static HWND g_hWnd = NULL;			//调用dll的主窗口句柄
 #pragma data_seg()
@@ -93,19 +95,19 @@ LRESULT CALLBACK LowLevelMouseProc(
 	if (g_hWnd != NULL && nCode == HC_ACTION)
 	{
 		if(wParam == WM_LBUTTONDOWN){
-			::SendMessage(g_hWnd, WM_MSG_MOUSE_L_DOWM, wParam, MAKELPARAM(((PMSLLHOOKSTRUCT)lParam)->pt.x, ((PMSLLHOOKSTRUCT)lParam)->pt.y));	
+			::PostMessage(g_hWnd, WM_MSG_MOUSE_L_DOWM, wParam, MAKELPARAM(((PMSLLHOOKSTRUCT)lParam)->pt.x, ((PMSLLHOOKSTRUCT)lParam)->pt.y));	
 		}
 		if(wParam == WM_LBUTTONUP){
-			::SendMessage(g_hWnd, WM_MSG_MOUSE_L_UP, wParam, MAKELPARAM(((PMSLLHOOKSTRUCT)lParam)->pt.x, ((PMSLLHOOKSTRUCT)lParam)->pt.y));	
+			::PostMessage(g_hWnd, WM_MSG_MOUSE_L_UP, wParam, MAKELPARAM(((PMSLLHOOKSTRUCT)lParam)->pt.x, ((PMSLLHOOKSTRUCT)lParam)->pt.y));	
 		}
 		if(wParam == WM_RBUTTONDOWN){
-			::SendMessage(g_hWnd, WM_MSG_MOUSE_R_DOWM, wParam, MAKELPARAM(((PMSLLHOOKSTRUCT)lParam)->pt.x, ((PMSLLHOOKSTRUCT)lParam)->pt.y));	
+			::PostMessage(g_hWnd, WM_MSG_MOUSE_R_DOWM, wParam, MAKELPARAM(((PMSLLHOOKSTRUCT)lParam)->pt.x, ((PMSLLHOOKSTRUCT)lParam)->pt.y));	
 		}
 		if(wParam == WM_RBUTTONUP){
-			::SendMessage(g_hWnd, WM_MSG_MOUSE_R_UP, wParam, MAKELPARAM(((PMSLLHOOKSTRUCT)lParam)->pt.x, ((PMSLLHOOKSTRUCT)lParam)->pt.y));	
+			::PostMessage(g_hWnd, WM_MSG_MOUSE_R_UP, wParam, MAKELPARAM(((PMSLLHOOKSTRUCT)lParam)->pt.x, ((PMSLLHOOKSTRUCT)lParam)->pt.y));	
 		}
 		if(wParam == WM_MOUSEMOVE){
-			::SendMessage(g_hWnd, WM_MSG_MOUSE_MOVE, wParam, MAKELPARAM(((PMSLLHOOKSTRUCT)lParam)->pt.x, ((PMSLLHOOKSTRUCT)lParam)->pt.y));	
+			::PostMessage(g_hWnd, WM_MSG_MOUSE_MOVE, wParam, MAKELPARAM(((PMSLLHOOKSTRUCT)lParam)->pt.x, ((PMSLLHOOKSTRUCT)lParam)->pt.y));	
 		}
 	}
 
@@ -116,6 +118,8 @@ LRESULT CALLBACK LowLevelMouseProc(
 /*安装低级鼠标钩子，从而截获系统所有的鼠标消息*/
 BOOL WINAPI StartHookMouse(HWND hWnd)
 {
+	TRACE(_T("MOUSEDLL# Start Hook Mouse...\r\n"));
+
 	g_hWnd = hWnd;
 
 	hhkMouse =::SetWindowsHookEx(WH_MOUSE_LL, LowLevelMouseProc, g_hInstDll, 0);
@@ -128,8 +132,64 @@ BOOL WINAPI StartHookMouse(HWND hWnd)
 /**卸载低级鼠标钩子**/
 VOID WINAPI StopHookMouse()
 {
+	TRACE(_T("MOUSEDLL# Stop Hook Mouse...\r\n"));
+
 	if (hhkMouse != NULL)
 	{
 		::UnhookWindowsHookEx(hhkMouse);
+	}
+}
+
+
+//键盘钩子过程
+LRESULT CALLBACK LowLevelKeyboardProc(
+	int nCode,      // hook code
+	WPARAM wParam,  // message identifier
+	LPARAM lParam   // mouse coordinates
+	)
+{
+	if(nCode ==HC_ACTION && wParam == WM_KEYDOWN)	//按键按下
+	{
+		PKBDLLHOOKSTRUCT pHookStruct = (PKBDLLHOOKSTRUCT)lParam;
+
+		DWORD dwvk = pHookStruct->vkCode;
+		DWORD dwMsg = 1 + (pHookStruct->scanCode << 16) + (pHookStruct->flags << 24);
+
+#if 0
+		char KeyName[20];
+		GetKeyNameTextA(dwMsg,KeyName,sizeof(KeyName));
+		TRACE("MOUSEDLL# keydown:%d, %s\r\n", dwvk, KeyName);
+#endif
+
+		if (g_hWnd != NULL)
+			::PostMessage(g_hWnd, WM_MSG_KEYDOWN, dwvk, dwMsg);	
+	}
+
+	return CallNextHookEx(hhkKeyboard, nCode, wParam, lParam);
+}
+
+
+/**安装低级键盘钩子**/
+BOOL WINAPI StartHookKeyboard(HWND hWnd){
+
+	TRACE(_T("MOUSEDLL# Start Hook Keyboard...\r\n"));
+
+	g_hWnd = hWnd;
+
+	hhkKeyboard =::SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, g_hInstDll, 0);
+	if(hhkKeyboard == NULL)
+		return FALSE;
+	else
+		return TRUE;
+}
+
+/**卸载键盘钩子**/
+VOID WINAPI StopHookKeyboard(){
+
+	TRACE(_T("MOUSEDLL# Stop Hook Keyboard...\r\n"));
+
+	if (hhkKeyboard != NULL)
+	{
+		::UnhookWindowsHookEx(hhkKeyboard);
 	}
 }

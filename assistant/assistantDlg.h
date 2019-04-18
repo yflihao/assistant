@@ -39,21 +39,27 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 public:
-	static BOOL LoadDll(HINSTANCE* _hInstDll, HWND _hWnd);
-	static BOOL DelDLL(HINSTANCE* _hInstDll);
+	BOOL LoadDll(HINSTANCE* _hInstDll);
+	BOOL DelDLL(HINSTANCE* _hInstDll);
 
 protected:
 	
 	/***********************   系统消息处理  *************************/
-	afx_msg LRESULT OnMsgMouseLDowm(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnMsgMouseLDown(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnMsgMouseLUp(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnMsgMouseRDown(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnMsgMouseRUp(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnMsgMouseMove(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnMsgKeydown(WPARAM wParam, LPARAM lParam);
 
 	/***********************   内部消息处理  *************************/
 	afx_msg LRESULT OnAlgmOpencvWinNew(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnAlgmOpencvWinDestroy(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnScButtonLDown(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnScButtonLUp(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnScButtonRDown(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnScButtonRUp(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnScKeydown(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnScEventEnd(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnChildExitCanvas(WPARAM wParam, LPARAM lParam);
 

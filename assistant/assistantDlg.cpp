@@ -11,9 +11,12 @@
 #define new DEBUG_NEW
 #endif
 
-#define WM_MSG_MOUSE_L_DOWM   WM_USER + 305
+#define WM_MSG_MOUSE_L_DOWN   WM_USER + 305
 #define WM_MSG_MOUSE_L_UP     WM_USER + 306
+#define WM_MSG_MOUSE_R_DOWN   WM_USER + 307
+#define WM_MSG_MOUSE_R_UP     WM_USER + 308
 #define WM_MSG_MOUSE_MOVE     WM_USER + 309
+#define WM_MSG_KEYDOWN        WM_USER + 310
 
 
 // 用于应用程序“关于”菜单项的 CAboutDlg 对话框
@@ -116,14 +119,20 @@ BEGIN_MESSAGE_MAP(CassistantDlg, CDialogEx)
 	/***********************   系统消息处理  *************************/
 	ON_MESSAGE(WM_ALGM_OPENCV_WIN_NEW, &CassistantDlg::OnAlgmOpencvWinNew)
 	ON_MESSAGE(WM_ALGM_OPENCV_WIN_DESTROY, &CassistantDlg::OnAlgmOpencvWinDestroy)
-	ON_MESSAGE(WM_MSG_MOUSE_L_DOWM, &CassistantDlg::OnMsgMouseLDowm)
+	ON_MESSAGE(WM_MSG_MOUSE_L_DOWN, &CassistantDlg::OnMsgMouseLDown)
 	ON_MESSAGE(WM_MSG_MOUSE_L_UP, &CassistantDlg::OnMsgMouseLUp)
+	ON_MESSAGE(WM_MSG_MOUSE_R_DOWN, &CassistantDlg::OnMsgMouseRDown)
+	ON_MESSAGE(WM_MSG_MOUSE_R_UP, &CassistantDlg::OnMsgMouseRUp)
 	ON_MESSAGE(WM_MSG_MOUSE_MOVE, &CassistantDlg::OnMsgMouseMove)
+	ON_MESSAGE(WM_MSG_KEYDOWN, &CassistantDlg::OnMsgKeydown)
 	ON_MESSAGE(WM_CHILD_EXIT_CANVAS, &CassistantDlg::OnChildExitCanvas)
 
 	/***********************   内部消息处理  *************************/
 	ON_MESSAGE(WM_SC_BUTTON_L_DOWN, &CassistantDlg::OnScButtonLDown)
 	ON_MESSAGE(WM_SC_BUTTON_L_UP, &CassistantDlg::OnScButtonLUp)
+	ON_MESSAGE(WM_SC_BUTTON_R_DOWN, &CassistantDlg::OnScButtonRDown)
+	ON_MESSAGE(WM_SC_BUTTON_R_UP, &CassistantDlg::OnScButtonRUp)
+	ON_MESSAGE(WM_SC_KEYDOWN, &CassistantDlg::OnScKeydown)
 	ON_MESSAGE(WM_SC_END, &CassistantDlg::OnScEventEnd)
 END_MESSAGE_MAP()
 
@@ -294,7 +303,7 @@ void CassistantDlg::OnBnClickedCapture()
 	// TODO: 在此添加控件通知处理程序代码
 	m_capture_enable = TRUE;
 	GetDlgItem(IDC_CAPTURE)->EnableWindow(FALSE);
-	LoadDll(&m_hInstDll, this->m_hWnd);
+	LoadDll(&m_hInstDll);
 	SetTimer(1, 500, NULL);  
 }
 
@@ -370,22 +379,22 @@ void CassistantDlg::OnTimer(UINT_PTR nIDEvent)
 
 		POINT MousePoint;  
 		::GetCursorPos(&MousePoint); 
-		HWND CaptureWindow = ::WindowFromPoint(MousePoint) ; 
-		RECT CaptureRect;  
+		HWND CaptureWindow = ::WindowFromPoint(MousePoint);
+		RECT CaptureRect;
 		::GetWindowRect(CaptureWindow, &CaptureRect);
-		if( CaptureRect.left < 0 ) CaptureRect.left = 0;  
-		if (CaptureRect.top < 0 ) CaptureRect.top = 0;  
+		if( CaptureRect.left < 0 ) CaptureRect.left = 0;
+		if (CaptureRect.top < 0 ) CaptureRect.top = 0;
 
 		HPEN newPen = ::CreatePen(PS_SOLID, 3, RGB(255, 0, 0));
-		HGDIOBJ oldPen = ::SelectObject(DeskDC, newPen); 
-		::Rectangle(DeskDC, CaptureRect.left, CaptureRect.top, CaptureRect.right, CaptureRect.bottom); 
+		HGDIOBJ oldPen = ::SelectObject(DeskDC, newPen);
+		::Rectangle(DeskDC, CaptureRect.left, CaptureRect.top, CaptureRect.right, CaptureRect.bottom);
 		::Sleep(100);
-		::Rectangle(DeskDC, CaptureRect.left, CaptureRect.top, CaptureRect.right, CaptureRect.bottom); 
+		::Rectangle(DeskDC, CaptureRect.left, CaptureRect.top, CaptureRect.right, CaptureRect.bottom);
 
-		::SetROP2(DeskDC, oldRop2);  
-		::SelectObject(DeskDC, oldPen);  
+		::SetROP2(DeskDC, oldRop2);
+		::SelectObject(DeskDC, oldPen);
 		::DeleteObject(newPen);  
-		::ReleaseDC(DeskHwnd, DeskDC);  
+		::ReleaseDC(DeskHwnd, DeskDC);
 	}
 
 	CDialogEx::OnTimer(nIDEvent);
@@ -466,7 +475,7 @@ afx_msg LRESULT CassistantDlg::OnScButtonLDown(WPARAM wParam, LPARAM lParam)
 {
 	if(m_sc != NULL){
 		int count = m_sc->getEXEcount();
-		char status[100];
+		char status[128];
 		sprintf(status, "%d 次", count);
 		GetDlgItem(IDC_COUNT)->SetWindowText(status);
 		
@@ -488,7 +497,7 @@ afx_msg LRESULT CassistantDlg::OnScButtonLUp(WPARAM wParam, LPARAM lParam)
 {
 	if(m_sc != NULL){
 		int count = m_sc->getEXEcount();
-		char status[100];
+		char status[128];
 		sprintf(status, "%d 次", count);
 		GetDlgItem(IDC_COUNT)->SetWindowText(status);
 
@@ -501,6 +510,74 @@ afx_msg LRESULT CassistantDlg::OnScButtonLUp(WPARAM wParam, LPARAM lParam)
 #endif
 
 		MakeMouseClickEx(BUTTON_L_UP, (int)wParam, (int)lParam);
+	}
+
+	return 0;
+}
+
+afx_msg LRESULT CassistantDlg::OnScButtonRDown(WPARAM wParam, LPARAM lParam)
+{
+	if(m_sc != NULL){
+		int count = m_sc->getEXEcount();
+		char status[128];
+		sprintf(status, "%d 次", count);
+		GetDlgItem(IDC_COUNT)->SetWindowText(status);
+
+		sprintf(status, "%s,%d,%d", desc[BUTTON_R_DOWN], (int)wParam, (int)lParam);
+		GetDlgItem(IDC_EDIT4)->SetWindowText(status);
+
+#ifdef _SCRIPT_READ_PROGRESS_
+		int percent = m_sc->getEXEpercent();
+		((CProgressCtrl*)GetDlgItem(IDC_PROGRESS1))->SetPos(percent);
+#endif
+
+		MakeMouseClickEx(BUTTON_R_DOWN, (int)wParam, (int)lParam);
+	}
+
+	return 0;
+}
+
+
+afx_msg LRESULT CassistantDlg::OnScButtonRUp(WPARAM wParam, LPARAM lParam)
+{
+	if(m_sc != NULL){
+		int count = m_sc->getEXEcount();
+		char status[128];
+		sprintf(status, "%d 次", count);
+		GetDlgItem(IDC_COUNT)->SetWindowText(status);
+
+		sprintf(status, "%s,%d,%d", desc[BUTTON_R_UP], (int)wParam, (int)lParam);
+		GetDlgItem(IDC_EDIT4)->SetWindowText(status);
+
+#ifdef _SCRIPT_READ_PROGRESS_
+		int percent = m_sc->getEXEpercent();
+		((CProgressCtrl*)GetDlgItem(IDC_PROGRESS1))->SetPos(percent);
+#endif
+
+		MakeMouseClickEx(BUTTON_R_UP, (int)wParam, (int)lParam);
+	}
+
+	return 0;
+}
+
+afx_msg LRESULT CassistantDlg::OnScKeydown(WPARAM wParam, LPARAM lParam)
+{
+	if(m_sc != NULL){
+		int count = m_sc->getEXEcount();
+		char status[128];
+		sprintf(status, "%d 次", count);
+		GetDlgItem(IDC_COUNT)->SetWindowText(status);
+
+		CString KeyName((char*)lParam); 
+		sprintf(status, "KEY:%d,%s", (int)wParam, KeyName);
+		GetDlgItem(IDC_EDIT4)->SetWindowText(status);
+
+#ifdef _SCRIPT_READ_PROGRESS_
+		int percent = m_sc->getEXEpercent();
+		((CProgressCtrl*)GetDlgItem(IDC_PROGRESS1))->SetPos(percent);
+#endif
+
+		keybd_event((int)wParam,0,0,0);
 	}
 
 	return 0;
@@ -529,7 +606,7 @@ void CassistantDlg::OnBnClickedRecord()
 
 	if(m_record_enable){
 
-		LoadDll(&m_hInstDll, this->m_hWnd);
+		LoadDll(&m_hInstDll);
 
 		CTime tm = CTime::GetCurrentTime();
 		CString filename = tm.Format("%Y%m%d_%H%M%S.txt");	
@@ -537,15 +614,25 @@ void CassistantDlg::OnBnClickedRecord()
 
 		m_rec = new CRecord(filepath + filename);
 
-		GetDlgItem(IDC_RECORD)->SetWindowText("停止");
+		GetDlgItem(IDC_CHECK1)->EnableWindow(FALSE);
+		GetDlgItem(IDC_CHECK2)->EnableWindow(FALSE);
+		GetDlgItem(IDC_CHECK3)->EnableWindow(FALSE);
+		GetDlgItem(IDC_CHECK4)->EnableWindow(FALSE);
+		GetDlgItem(IDC_CHECK5)->EnableWindow(FALSE);
 		GetDlgItem(IDC_EDIT2)->EnableWindow(TRUE);
 		GetDlgItem(IDC_EDIT3)->EnableWindow(TRUE);
 		GetDlgItem(IDC_EDIT3)->SetWindowText(filename);
+		GetDlgItem(IDC_RECORD)->SetWindowText("停止");
 
 	}else{
 		DelDLL(&m_hInstDll);
 		delete m_rec;
 
+		GetDlgItem(IDC_CHECK1)->EnableWindow(TRUE);
+		GetDlgItem(IDC_CHECK2)->EnableWindow(TRUE);
+		GetDlgItem(IDC_CHECK3)->EnableWindow(TRUE);
+		GetDlgItem(IDC_CHECK4)->EnableWindow(TRUE);
+		GetDlgItem(IDC_CHECK5)->EnableWindow(TRUE);
 		GetDlgItem(IDC_EDIT2)->EnableWindow(FALSE);
 		GetDlgItem(IDC_EDIT3)->EnableWindow(FALSE);
 		GetDlgItem(IDC_RECORD)->SetWindowText("记录");
@@ -554,34 +641,72 @@ void CassistantDlg::OnBnClickedRecord()
 
 /************************************   hook   *****************************************/
 
-BOOL CassistantDlg::LoadDll(HINSTANCE* _hInstDll, HWND _hWnd)
+BOOL CassistantDlg::LoadDll(HINSTANCE* _hInstDll)
 {
+	BOOL ret = FALSE;
+
 	*_hInstDll = LoadLibrary(_T("MouseHook.dll"));
 	if(*_hInstDll == NULL){
 		AfxMessageBox(_T("no MouseHook.dll"));
 		return FALSE;
 	}
 
-	typedef BOOL (CALLBACK *StartHookMouse)(HWND hWnd); 
-	StartHookMouse StartHook = (StartHookMouse)::GetProcAddress(*_hInstDll, "StartHookMouse");
-	if(StartHook == NULL){
-		AfxMessageBox(_T("no StartHookMouse"));
-		return FALSE;
+	if(BST_CHECKED == IsDlgButtonChecked(IDC_CHECK1) || 
+		BST_CHECKED == IsDlgButtonChecked(IDC_CHECK2) ||
+		BST_CHECKED == IsDlgButtonChecked(IDC_CHECK3) ||
+		BST_CHECKED == IsDlgButtonChecked(IDC_CHECK4)){
+
+			typedef BOOL (CALLBACK *StartHookMouse)(HWND hWnd); 
+			StartHookMouse StartMouseHook = (StartHookMouse)::GetProcAddress(*_hInstDll, "StartHookMouse");
+			if(StartMouseHook == NULL){
+				AfxMessageBox(_T("no StartHookMouse"));
+				return FALSE;
+			}
+			ret = StartMouseHook(m_hWnd);
 	}
-	
-	return StartHook(_hWnd);
+
+	if(BST_CHECKED == IsDlgButtonChecked(IDC_CHECK5))
+	{
+		typedef BOOL (CALLBACK *StartHookKeyboard)(HWND hWnd); 
+		StartHookKeyboard StartKeyboardHook = (StartHookKeyboard)::GetProcAddress(*_hInstDll, "StartHookKeyboard");
+		if(StartKeyboardHook == NULL){
+			AfxMessageBox(_T("no StartHookKeyboard"));
+			return FALSE;
+		}
+
+		ret |= StartKeyboardHook(m_hWnd);
+	}
+
+	return ret;
 }
 
 BOOL CassistantDlg::DelDLL(HINSTANCE* _hInstDll)
 {
-	typedef VOID (CALLBACK *StopHookMouse)(); 
-	StopHookMouse StopHook =(StopHookMouse)::GetProcAddress(*_hInstDll, "StopHookMouse");
-	if(StopHook == NULL){
-		AfxMessageBox(_T("no StopHook"));
-		return FALSE;
+	if(BST_CHECKED == IsDlgButtonChecked(IDC_CHECK1) || 
+		BST_CHECKED == IsDlgButtonChecked(IDC_CHECK2) ||
+		BST_CHECKED == IsDlgButtonChecked(IDC_CHECK3) ||
+		BST_CHECKED == IsDlgButtonChecked(IDC_CHECK4)){
+
+		typedef VOID (CALLBACK *StopHookMouse)(); 
+		StopHookMouse StopMouseHook =(StopHookMouse)::GetProcAddress(*_hInstDll, "StopHookMouse");
+		if(StopMouseHook == NULL){
+			AfxMessageBox(_T("no StopHookMouse"));
+			return FALSE;
+		}
+
+		StopMouseHook();
 	}
 
-	StopHook();
+	if(BST_CHECKED == IsDlgButtonChecked(IDC_CHECK5)){
+		typedef VOID (CALLBACK *StopHookKeyboard)(); 
+		StopHookKeyboard StopKeyboardHook =(StopHookKeyboard)::GetProcAddress(*_hInstDll, "StopHookKeyboard");
+		if(StopKeyboardHook == NULL){
+			AfxMessageBox(_T("no StopHookKeyboard"));
+			return FALSE;
+		}
+
+		StopKeyboardHook();
+	}
 
 	::FreeLibrary(*_hInstDll);
 	*_hInstDll = NULL;
@@ -590,7 +715,7 @@ BOOL CassistantDlg::DelDLL(HINSTANCE* _hInstDll)
 }
 
 
-afx_msg LRESULT CassistantDlg::OnMsgMouseLDowm(WPARAM wParam, LPARAM lParam)
+afx_msg LRESULT CassistantDlg::OnMsgMouseLDown(WPARAM wParam, LPARAM lParam)
 {
 	char status[32] = {0};
 
@@ -648,6 +773,42 @@ afx_msg LRESULT CassistantDlg::OnMsgMouseLUp(WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
+afx_msg LRESULT CassistantDlg::OnMsgMouseRDown(WPARAM wParam, LPARAM lParam)
+{
+	char status[20] = {0};
+
+	if(!ClickIsValid(LOWORD(lParam), HIWORD(lParam)))
+		return 0;
+
+	if(m_record_enable && m_rec != NULL){
+		if(BST_CHECKED == IsDlgButtonChecked(IDC_CHECK3)){
+			m_rec->SetRecord(BUTTON_R_DOWN, LOWORD(lParam), HIWORD(lParam));
+			sprintf(status, "%s, %d, %d", desc[BUTTON_R_DOWN], LOWORD(lParam), HIWORD(lParam));
+			GetDlgItem(IDC_EDIT2)->SetWindowText(status);
+		}
+	}
+
+	return 0;
+}
+
+afx_msg LRESULT CassistantDlg::OnMsgMouseRUp(WPARAM wParam, LPARAM lParam)
+{
+	char status[20] = {0};
+
+	if(!ClickIsValid(LOWORD(lParam), HIWORD(lParam)))
+		return 0;
+
+	if(m_record_enable && m_rec != NULL){
+		if(BST_CHECKED == IsDlgButtonChecked(IDC_CHECK3)){
+			m_rec->SetRecord(BUTTON_R_UP, LOWORD(lParam), HIWORD(lParam));
+			sprintf(status, "%s, %d, %d", desc[BUTTON_R_UP], LOWORD(lParam), HIWORD(lParam));
+			GetDlgItem(IDC_EDIT2)->SetWindowText(status);
+		}
+	}
+
+	return 0;
+}
+
 afx_msg LRESULT CassistantDlg::OnMsgMouseMove(WPARAM wParam, LPARAM lParam)
 {
 	if(m_capture_enable){
@@ -659,6 +820,22 @@ afx_msg LRESULT CassistantDlg::OnMsgMouseMove(WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
+afx_msg LRESULT CassistantDlg::OnMsgKeydown(WPARAM wParam, LPARAM lParam)
+{
+	DWORD dwvk = wParam;
+	DWORD dwMsg= lParam;
+	char KeyName[20] = {0};
+
+	if(m_record_enable && m_rec != NULL){
+		if(BST_CHECKED == IsDlgButtonChecked(IDC_CHECK5)){
+			m_rec->SetRecord(KEY_DOWN, dwvk, dwMsg);
+			GetKeyNameTextA(dwMsg,KeyName,sizeof(KeyName));
+			GetDlgItem(IDC_EDIT2)->SetWindowText(KeyName);
+		}
+	}
+
+	return 0;
+}
 
 VOID CassistantDlg::MakeMouseClick(int event, int x, int y)
 {

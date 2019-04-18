@@ -7,7 +7,7 @@
 #include "Config.h"
 #include "afxdialogex.h"
 
-#define WM_MSG_MOUSE_L_DOWM   WM_USER + 305
+#define WM_MSG_MOUSE_L_DOWN   WM_USER + 305
 #define WM_MSG_MOUSE_L_UP     WM_USER + 306
 #define WM_MSG_MOUSE_MOVE     WM_USER + 309
 
@@ -35,7 +35,7 @@ void CConfig::DoDataExchange(CDataExchange* pDX)
 
 
 BEGIN_MESSAGE_MAP(CConfig, CDialogEx)
-	ON_MESSAGE(WM_MSG_MOUSE_L_DOWM, &CConfig::OnMsgMouseLDowm)
+	ON_MESSAGE(WM_MSG_MOUSE_L_DOWN, &CConfig::OnMsgMouseLDown)
 	ON_MESSAGE(WM_MSG_MOUSE_MOVE, &CConfig::OnMsgMouseMove)
 	ON_BN_CLICKED(IDC_BUTTON1, &CConfig::OnBnClickedButton1)
 	ON_BN_CLICKED(IDC_BUTTON4, &CConfig::OnBnClickedButton4)
@@ -157,7 +157,7 @@ VOID CConfig::SyncConfig()
 	}
 }
 
-afx_msg LRESULT CConfig::OnMsgMouseLDowm(WPARAM wParam, LPARAM lParam)
+afx_msg LRESULT CConfig::OnMsgMouseLDown(WPARAM wParam, LPARAM lParam)
 {
 	char status[20];
 
@@ -170,7 +170,7 @@ afx_msg LRESULT CConfig::OnMsgMouseLDowm(WPARAM wParam, LPARAM lParam)
 	}
 	
 	GetDlgItem(IDC_BUTTON1+mode)->EnableWindow(TRUE);
-	CassistantDlg::DelDLL(&m_hInstDll);
+	DelDLL(&m_hInstDll);
 	mode = -1;
 
 	return 0;
@@ -192,7 +192,7 @@ void CConfig::OnBnClickedButton1()
 {
 	// TODO: 在此添加控件通知处理程序代码
 
-	if(CassistantDlg::LoadDll(&m_hInstDll, this->m_hWnd)){
+	if(LoadDll(&m_hInstDll)){
 		mode = 0;
 		GetDlgItem(IDC_EDIT1)->GetWindowText(last);
 		GetDlgItem(IDC_BUTTON1)->EnableWindow(FALSE);
@@ -202,7 +202,7 @@ void CConfig::OnBnClickedButton1()
 void CConfig::OnBnClickedButton5()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	if(CassistantDlg::LoadDll(&m_hInstDll, this->m_hWnd)){
+	if(LoadDll(&m_hInstDll)){
 		mode = 1;
 		GetDlgItem(IDC_EDIT6)->GetWindowText(last);
 		GetDlgItem(IDC_BUTTON5)->EnableWindow(FALSE);
@@ -213,7 +213,7 @@ void CConfig::OnBnClickedButton5()
 void CConfig::OnBnClickedButton6()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	if(CassistantDlg::LoadDll(&m_hInstDll, this->m_hWnd)){
+	if(LoadDll(&m_hInstDll)){
 		mode = 2;
 		GetDlgItem(IDC_EDIT7)->GetWindowText(last);
 		GetDlgItem(IDC_BUTTON6)->EnableWindow(FALSE);
@@ -258,4 +258,37 @@ CString CConfig::GetCurrentPath()
 	return filepath;
 }
 
+BOOL CConfig::LoadDll(HINSTANCE* _hInstDll)
+{
+	*_hInstDll = LoadLibrary(_T("MouseHook.dll"));
+	if(*_hInstDll == NULL){
+		AfxMessageBox(_T("no MouseHook.dll"));
+		return FALSE;
+	}
 
+	typedef BOOL (CALLBACK *StartHookMouse)(HWND hWnd); 
+	StartHookMouse StartHook = (StartHookMouse)::GetProcAddress(*_hInstDll, "StartHookMouse");
+	if(StartHook == NULL){
+		AfxMessageBox(_T("no StartHookMouse"));
+		return FALSE;
+	}
+
+	return StartHook(m_hWnd);
+}
+
+BOOL CConfig::DelDLL(HINSTANCE* _hInstDll)
+{
+	typedef VOID (CALLBACK *StopHookMouse)(); 
+	StopHookMouse StopHook =(StopHookMouse)::GetProcAddress(*_hInstDll, "StopHookMouse");
+	if(StopHook == NULL){
+		AfxMessageBox(_T("no StopHook"));
+		return FALSE;
+	}
+
+	StopHook();
+
+	::FreeLibrary(*_hInstDll);
+	*_hInstDll = NULL;
+
+	return TRUE;
+}

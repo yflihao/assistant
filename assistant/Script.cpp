@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "Script.h"
 
-#define SLEEPUNIT 10
+#define SLEEPUNIT 100
 #define SLEEPINTERVAL  (1000/SLEEPUNIT)		// µ¥Î» ms
 
 
@@ -70,7 +70,7 @@ UINT CScript::MainThread(LPVOID pParam)
 	if(!(h_file.Open(script->m_script_path, CFile::modeRead | CFile::typeBinary))) 
 	{
 		AfxMessageBox("Open file failed!");
-		::PostMessage(script->m_pOwner->m_hWnd, WM_SC_END, (WPARAM)0, (LPARAM)0);
+		::SendMessage(script->m_pOwner->m_hWnd, WM_SC_END, (WPARAM)0, (LPARAM)0);
 		return FALSE;
 	}
 	h_file.SeekToEnd();
@@ -83,7 +83,7 @@ UINT CScript::MainThread(LPVOID pParam)
 	if(!(script->m_script_file.Open(script->m_script_path, CFile::modeRead | CFile::typeBinary))) 
 	{
 		AfxMessageBox("Open script file failed!");
-		::PostMessage(script->m_pOwner->m_hWnd, WM_SC_END, (WPARAM)0, (LPARAM)0);
+		::SendMessage(script->m_pOwner->m_hWnd, WM_SC_END, (WPARAM)0, (LPARAM)0);
 		return FALSE;
 	}
 
@@ -96,7 +96,7 @@ UINT CScript::MainThread(LPVOID pParam)
 			sprintf(status, "parser script failed, %s", cstrLine);
 			AfxMessageBox(status);
 			script->m_script_file.Close();
-			::PostMessage(script->m_pOwner->m_hWnd, WM_SC_END, (WPARAM)0, (LPARAM)0);
+			::SendMessage(script->m_pOwner->m_hWnd, WM_SC_END, (WPARAM)0, (LPARAM)0);
 			return FALSE;
 		}
 
@@ -125,26 +125,28 @@ UINT CScript::MainThread(LPVOID pParam)
 
 
 		if(cmd == BUTTON_L_DOWN){
-			::PostMessage(script->m_pOwner->m_hWnd, WM_SC_BUTTON_L_DOWN, (WPARAM)_ttoi(cstrarray.GetAt(2)), (LPARAM)_ttoi(cstrarray.GetAt(3)));
+			::SendMessage(script->m_pOwner->m_hWnd, WM_SC_BUTTON_L_DOWN, (WPARAM)_ttoi(cstrarray.GetAt(2)), (LPARAM)_ttoi(cstrarray.GetAt(3)));
 		}else if(cmd == BUTTON_L_UP){
-			::PostMessage(script->m_pOwner->m_hWnd, WM_SC_BUTTON_L_UP, (WPARAM)_ttoi(cstrarray.GetAt(2)), (LPARAM)_ttoi(cstrarray.GetAt(3)));
+			::SendMessage(script->m_pOwner->m_hWnd, WM_SC_BUTTON_L_UP, (WPARAM)_ttoi(cstrarray.GetAt(2)), (LPARAM)_ttoi(cstrarray.GetAt(3)));
 		}else if(cmd == BUTTON_R_DOWN){
-			::PostMessage(script->m_pOwner->m_hWnd, WM_SC_BUTTON_R_DOWN, (WPARAM)_ttoi(cstrarray.GetAt(2)), (LPARAM)_ttoi(cstrarray.GetAt(3)));
+			::SendMessage(script->m_pOwner->m_hWnd, WM_SC_BUTTON_R_DOWN, (WPARAM)_ttoi(cstrarray.GetAt(2)), (LPARAM)_ttoi(cstrarray.GetAt(3)));
 		}else if(cmd == BUTTON_R_UP){
-			::PostMessage(script->m_pOwner->m_hWnd, WM_SC_BUTTON_R_UP, (WPARAM)_ttoi(cstrarray.GetAt(2)), (LPARAM)_ttoi(cstrarray.GetAt(3)));
+			::SendMessage(script->m_pOwner->m_hWnd, WM_SC_BUTTON_R_UP, (WPARAM)_ttoi(cstrarray.GetAt(2)), (LPARAM)_ttoi(cstrarray.GetAt(3)));
+		}else if(cmd == KEY_DOWN){
+			::SendMessage(script->m_pOwner->m_hWnd, WM_SC_KEYDOWN, (WPARAM)_ttoi(cstrarray.GetAt(2)), (LPARAM)(LPCTSTR)(cstrarray.GetAt(3)));
 		}
 		else{
 			sprintf(status, "script unkown cmd, %d", cmd);
 			AfxMessageBox(status);
 			script->m_script_file.Close();
-			::PostMessage(script->m_pOwner->m_hWnd, WM_SC_END, (WPARAM)0, (LPARAM)0);
+			::SendMessage(script->m_pOwner->m_hWnd, WM_SC_END, (WPARAM)0, (LPARAM)0);
 			return FALSE;
 		}
 	}
 
 	script->m_script_file.Close();
 
-	::PostMessage(script->m_pOwner->m_hWnd, WM_SC_END, (WPARAM)0, (LPARAM)0);
+	::SendMessage(script->m_pOwner->m_hWnd, WM_SC_END, (WPARAM)0, (LPARAM)0);
 
 	return TRUE;
 }

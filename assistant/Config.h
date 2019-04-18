@@ -32,7 +32,7 @@ public:
 
 protected:
 	/***********************   系统消息处理  *************************/
-	afx_msg LRESULT OnMsgMouseLDowm(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnMsgMouseLDown(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnMsgMouseMove(WPARAM wParam, LPARAM lParam);
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 
@@ -55,5 +55,7 @@ private:
 	VOID WriteConfig();
 	VOID SyncConfig();
 
-	BOOL ClickIsValid(int x, int y);	
+	BOOL LoadDll(HINSTANCE* _hInstDll);
+	BOOL DelDLL(HINSTANCE* _hInstDll);
+	BOOL ClickIsValid(int x, int y);
 };

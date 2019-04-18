@@ -6,7 +6,8 @@
 #define WM_SC_BUTTON_L_UP			WM_USER+201
 #define WM_SC_BUTTON_R_DOWN		    WM_USER+202
 #define WM_SC_BUTTON_R_UP			WM_USER+203
-#define WM_SC_END					WM_USER+204
+#define WM_SC_KEYDOWN     			WM_USER+204
+#define WM_SC_END					WM_USER+206
 
 #define _SCRIPT_READ_PROGRESS_
 

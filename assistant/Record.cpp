@@ -30,7 +30,16 @@ BOOL CRecord::SetRecord(int event, WPARAM wp, LPARAM lp)
 	case BUTTON_L_UP:
 	case BUTTON_R_DOWN:
 	case BUTTON_R_UP:
-		WriteCstring.Format("%d,%d,%d,%d\r\n", m_current_tick - m_last_tick, event, wp, lp);
+		{
+			WriteCstring.Format("%d,%d,%d,%d\r\n", m_current_tick - m_last_tick, event, wp, lp);
+		}
+		break;
+	case KEY_DOWN:
+		{
+			char KeyName[20] = {0};
+			GetKeyNameTextA(lp,KeyName,sizeof(KeyName));
+			WriteCstring.Format("%d,%d,%d,%s\r\n", m_current_tick - m_last_tick, event, wp, KeyName);
+		}
 		break;
 	default:
 		break;

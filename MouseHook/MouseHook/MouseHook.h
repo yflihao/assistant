@@ -22,6 +22,9 @@ public:
 	BOOL WINAPI StartHookMouse(HWND hWnd);
 	VOID WINAPI StopHookMouse();
 
+	BOOL WINAPI StartHookKeyboard(HWND hWnd);
+	VOID WINAPI StopHookKeyboard();
+
 // ÖØÐ´
 public:
 	virtual BOOL InitInstance();
